@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In / Sign Up - NestLeap</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #003366, #0066cc);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      width: 380px;
+      text-align: center;
+    }
+
+    h2 {
+      color: #003366;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #003366;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+
+    button:hover { background-color: #0055aa; }
+
+    .tabs {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      color: #003366;
+      font-weight: 600;
+    }
+
+    .tab.active {
+      border-color: #003366;
+    }
+
+    .form-section {
+      display: none;
+    }
+
+    .form-section.active {
+      display: block;
+    }
+
+    .error { color: red; margin-top: 10px; font-size: 14px; }
+    .success { color: green; margin-top: 10px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="tabs">
+      <div id="loginTab" class="tab active">Login</div>
+      <div id="signupTab" class="tab">Sign Up</div>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginFormSection" class="form-section active">
+      <h2>Sign In</h2>
+      <form id="loginForm">
+        <input type="email" id="loginEmail" placeholder="Enter email" required />
+        <input type="password" id="loginPassword" placeholder="Enter password" required />
+        <button type="submit">Login</button>
+        <p class="error" id="loginError"></p>
+      </form>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="signupFormSection" class="form-section">
+      <h2>Create Account</h2>
+      <form id="signupForm">
+        <input type="text" id="signupName" placeholder="Enter your name" required />
+        <input type="email" id="signupEmail" placeholder="Enter email" required />
+        <input type="text" id="signupMobile" placeholder="Enter mobile number" required />
+        <input type="password" id="signupPassword" placeholder="Enter password" required />
+        <button type="submit">Sign Up</button>
+        <p class="error" id="signupError"></p>
+        <p class="success" id="signupSuccess"></p>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Switch Tabs
+    const loginTab = document.getElementById("loginTab");
+    const signupTab = document.getElementById("signupTab");
+    const loginSection = document.getElementById("loginFormSection");
+    const signupSection = document.getElementById("signupFormSection");
+
+    loginTab.addEventListener("click", () => {
+      loginTab.classList.add("active");
+      signupTab.classList.remove("active");
+      loginSection.classList.add("active");
+      signupSection.classList.remove("active");
+    });
+
+    signupTab.addEventListener("click", () => {
+      signupTab.classList.add("active");
+      loginTab.classList.remove("active");
+      signupSection.classList.add("active");
+      loginSection.classList.remove("active");
+    });
+
+    // Handle LOGIN
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value;
+      const password = document.getElementById("loginPassword").value;
+      const errorMsg = document.getElementById("loginError");
+      errorMsg.textContent = "";
+
+      try {
+        const res = await fetch("http://localhost:8080/api/users/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+
+        if (res.ok) {
+          const user = await res.json();
+          localStorage.setItem("loggedInUser", JSON.stringify(user));
+          window.location.href = "index.html";
+        } else {
+          errorMsg.textContent = "❌ Invalid email or password!";
+        }
+      } catch (error) {
+        errorMsg.textContent = "⚠️ Server error. Try again later.";
+      }
+    });
+
+    // Handle SIGNUP
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const userName = document.getElementById("signupName").value;
+      const email = document.getElementById("signupEmail").value;
+      const mobileNumber = document.getElementById("signupMobile").value;
+      const password = document.getElementById("signupPassword").value;
+      const errorMsg = document.getElementById("signupError");
+      const successMsg = document.getElementById("signupSuccess");
+
+      errorMsg.textContent = "";
+      successMsg.textContent = "";
+
+      try {
+        const res = await fetch("http://localhost:8080/api/users/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userName, email, mobileNumber, password })
+        });
+
+        if (res.ok) {
+          successMsg.textContent = "✅ Account created successfully! You can now log in.";
+          setTimeout(() => {
+            signupTab.classList.remove("active");
+            loginTab.classList.add("active");
+            signupSection.classList.remove("active");
+            loginSection.classList.add("active");
+          }, 1500);
+        } else {
+          const text = await res.text();
+          errorMsg.textContent = "⚠️ " + text;
+        }
+      } catch (error) {
+        errorMsg.textContent = "⚠️ Server error. Try again later.";
+      }
+    });
+  </script>
+</body>
+</html>

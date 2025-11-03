@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NestLeap Properties</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      color: #333;
+    }
+
+    header {
+      background: linear-gradient(135deg, #003366, #0066cc);
+      color: white;
+      padding: 15px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    header h1 {
+      font-size: 24px;
+      margin: 0;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 25px;
+      margin: 0;
+      padding: 0;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: 0.3s;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    nav a:hover { color: #ffd700; }
+
+    main {
+      padding: 40px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .title {
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 30px;
+      color: #003366;
+      font-weight: 600;
+    }
+
+    .property-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+    }
+
+    .property-card {
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .property-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+    }
+
+    .property-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    .property-card-content {
+      padding: 15px;
+    }
+
+    .property-card h3 {
+      margin: 0 0 8px;
+      color: #003366;
+      font-size: 18px;
+    }
+
+    .property-card p {
+      margin: 4px 0;
+      font-size: 14px;
+    }
+
+    .property-card button {
+      background: #003366;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 10px;
+    }
+
+    .property-card button:hover { background: #0056b3; }
+
+    .size-badge {
+      display: inline-block;
+      background-color: #e6f0ff;
+      color: #003366;
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 13px;
+      margin-top: 6px;
+    }
+
+    .rating {
+      color: #ffd700;
+      font-size: 16px;
+      margin: 6px 0;
+    }
+
+    footer {
+      background: #003366;
+      color: white;
+      text-align: center;
+      padding: 25px 10px;
+      margin-top: 50px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>🏠 NestLeap</h1>
+    <nav>
+      <ul id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="privacy.html">Terms & Conditions</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="signin.html" id="signinLink">Sign In</a></li>
+        <li><a href="signin.html" id="signupLink">Sign Up</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h2 class="title">🏡 Available Properties</h2>
+    <div class="property-grid" id="propertyGrid"></div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 NestLeap. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // ⭐ Generate stars for ratings
+    function getStars(rating) {
+      const fullStars = Math.floor(rating);
+      const halfStar = rating % 1 >= 0.5;
+      let stars = "⭐".repeat(fullStars);
+      if (halfStar) stars += "✨";
+      return stars.padEnd(5, "☆");
+    }
+
+    // ✅ Handle login display
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    const nav = document.getElementById("navLinks");
+    if (user) {
+      document.getElementById("signinLink").style.display = "none";
+      document.getElementById("signupLink").style.display = "none";
+      const logoutItem = document.createElement("li");
+      logoutItem.innerHTML = `<a href="#" id="logoutBtn">Logout</a>`;
+      nav.appendChild(logoutItem);
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        localStorage.removeItem("loggedInUser");
+        alert("👋 Logged out successfully!");
+        location.reload();
+      });
+    }
+
+    // ✅ Function to render properties
+    function renderProperties(properties) {
+      const grid = document.getElementById("propertyGrid");
+      grid.innerHTML = "";
+      if (!properties.length) {
+        grid.innerHTML = "<p>No properties available right now.</p>";
+        return;
+      }
+
+      properties.forEach(p => {
+        const card = document.createElement("div");
+        card.className = "property-card";
+        card.innerHTML = `
+          <img src="${p.image || 'https://via.placeholder.com/400x200?text=No+Image'}" alt="${p.name}">
+          <div class="property-card-content">
+            <h3>${p.name}</h3>
+            <div class="rating">${getStars(p.rating)} (${p.rating?.toFixed(1) || "N/A"})</div>
+            <p><b>📍 Location:</b> ${p.location}</p>
+            <p><b>💰 Price:</b> ${p.price}</p>
+            <p><b>🏠 Type:</b> ${p.type}</p>
+            <span class="size-badge">📏 ${p.size}</span>
+            <button onclick="viewDetails(${p.id})">View Details</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // ✅ Try fetching from backend → fallback to data.json
+    fetch("http://localhost:8080/api/properties")
+      .then(res => {
+        if (!res.ok) throw new Error("Backend not available");
+        return res.json();
+      })
+      .then(data => {
+        console.log("Loaded from backend ✅");
+        renderProperties(data);
+      })
+      .catch(() => {
+        console.warn("⚠️ Backend unavailable, loading from data.json...");
+        fetch("data.json")
+          .then(res => res.json())
+          .then(data => {
+            renderProperties(data);
+          })
+          .catch(err => {
+            console.error("❌ Failed to load data.json", err);
+            document.getElementById("propertyGrid").innerHTML =
+              "<p>⚠️ Error loading properties. Please check backend or data.json.</p>";
+          });
+      });
+
+    // ✅ Property click logic
+    function viewDetails(id) {
+      const user = JSON.parse(localStorage.getItem("loggedInUser"));
+      if (!user) {
+        localStorage.setItem("selectedPropertyId", id);
+        window.location.href = "signin.html";
+      } else {
+        window.location.href = `propertyDetails.html?id=${id}`;
+      }
+    }
+  </script>
+  
+</body>
+</html>
