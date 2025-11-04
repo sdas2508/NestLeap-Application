@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: nestleapapplication
-    env: java
-    plan: free
-    buildCommand: ./mvnw clean package -DskipTests
-    startCommand: java -jar target/*.jar
-    region: oregon
-
